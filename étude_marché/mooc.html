@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="fr" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse du Marché des MOOCs en IA Générative - 2025</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Visualization & Content Choices: 
+        - Key Metrics (Inform): Large number displays for immediate impact. Goal: Provide instant key takeaways. Method: HTML/Tailwind.
+        - Market Segmentation (Compare): Donut chart. Goal: Show learner distribution. Method: Chart.js Canvas. Interaction: Tooltips on hover.
+        - Market Growth Projections (Change): Line chart. Goal: Visualize future market size. Method: Chart.js Canvas. Interaction: Tooltips for yearly data.
+        - Geographic Distribution (Inform): HTML/CSS color-coded map. Goal: Show regional demand without complex graphics. Method: Styled divs.
+        - Ecosystem Actors (Organize): Interactive HTML/CSS grid. Goal: Map relationships between actor types. Method: JS toggle visibility on click. Justification: Avoids static, hard-to-read diagrams.
+        - Competitive Matrix (Compare): HTML/CSS 2x2 grid. Goal: Position key players. Method: Styled divs with hover effects for details.
+        - SWOT Analysis (Organize): Four-quadrant HTML/CSS grid. Goal: Present strategic factors clearly. Method: Styled divs. Justification: Standard, easily digestible format.
+        - ✨ AI Course Idea Generator (Generate/Inform): Button triggers Gemini API call. Goal: Showcase AI-powered content generation for MOOCs. Method: JS fetch to Gemini, display in modal.
+    -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* slate-50 */
+            color: #1e293b; /* slate-800 */
+        }
+        .nav-link {
+            transition: color 0.3s, border-bottom-color 0.3s;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #0d9488; /* teal-600 */
+            border-bottom-color: #0d9488; /* teal-600 */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .card {
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .section-fade-in {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        .section-fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .modal {
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+        .modal-content {
+            transition: transform 0.3s ease-in-out;
+        }
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #0d9488; /* Teal */
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-xl font-bold text-slate-800">IA Générative & MOOCs 2025</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a href="#accueil" class="nav-link px-3 py-2 text-sm font-medium text-slate-600">Accueil</a>
+                        <a href="#marche" class="nav-link px-3 py-2 text-sm font-medium text-slate-600">Marché</a>
+                        <a href="#acteurs" class="nav-link px-3 py-2 text-sm font-medium text-slate-600">Acteurs</a>
+                        <a href="#tendances" class="nav-link px-3 py-2 text-sm font-medium text-slate-600">Tendances</a>
+                        <a href="#perspectives" class="nav-link px-3 py-2 text-sm font-medium text-slate-600">Perspectives</a>
+                        <a href="#swot" class="nav-link px-3 py-2 text-sm font-medium text-slate-600">SWOT</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-slate-700 hover:bg-slate-100 focus:outline-none">
+                        <span class="sr-only">Ouvrir le menu principal</span>
+                        <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden">
+                <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                    <a href="#accueil" class="block nav-link px-3 py-2 text-base font-medium text-slate-600">Accueil</a>
+                    <a href="#marche" class="block nav-link px-3 py-2 text-base font-medium text-slate-600">Marché</a>
+                    <a href="#acteurs" class="block nav-link px-3 py-2 text-base font-medium text-slate-600">Acteurs</a>
+                    <a href="#tendances" class="block nav-link px-3 py-2 text-base font-medium text-slate-600">Tendances</a>
+                    <a href="#perspectives" class="block nav-link px-3 py-2 text-base font-medium text-slate-600">Perspectives</a>
+                    <a href="#swot" class="block nav-link px-3 py-2 text-base font-medium text-slate-600">SWOT</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+
+        <section id="accueil" class="scroll-mt-20 section-fade-in">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Tableau de Bord Stratégique</h2>
+            <p class="text-lg text-slate-600 mb-8">Un aperçu de l'écosystème des MOOCs en IA Générative pour 2025.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card p-6 flex flex-col justify-center items-center">
+                    <span class="text-sm font-medium text-slate-500">Marché Potentiel (SOM) 2025</span>
+                    <span class="text-4xl font-bold text-teal-600 mt-2">~500 M$</span>
+                    <span class="text-xs text-slate-400 mt-1">Fourchette: 400-600 M$</span>
+                </div>
+                <div class="card p-6 flex flex-col justify-center items-center">
+                    <span class="text-sm font-medium text-slate-500">Croissance Annuelle Prévue (TCAC)</span>
+                    <span class="text-4xl font-bold text-teal-600 mt-2">~38%</span>
+                     <span class="text-xs text-slate-400 mt-1">Projection 2025-2030</span>
+                </div>
+                <div class="card p-6 flex flex-col justify-center items-center">
+                    <span class="text-sm font-medium text-slate-500">Compétence la plus recherchée</span>
+                    <span class="text-3xl font-bold text-teal-600 mt-2 text-center">Prompt Engineering</span>
+                </div>
+                <div class="card md:col-span-2 lg:col-span-1 p-6">
+                    <h3 class="font-semibold text-slate-800 mb-4">Segmentation des Apprenants</h3>
+                    <div class="chart-container h-48 md:h-56">
+                        <canvas id="segmentationChart"></canvas>
+                    </div>
+                </div>
+                <div class="card md:col-span-2 p-6">
+                    <h3 class="font-semibold text-slate-800 mb-2">Opportunité Stratégique Majeure</h3>
+                    <p class="text-slate-600 leading-relaxed">La transformation profonde des métiers par l'IA génère un besoin massif de <span class="font-semibold text-teal-700">reconversion et de montée en compétences</span> pour la population active. La demande corporate (B2B) pour des formations structurées représente le segment le plus lucratif et le principal moteur de croissance pour les plateformes MOOC.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="marche" class="scroll-mt-20 mt-16 section-fade-in">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Le Marché en Chiffres</h2>
+            <p class="text-lg text-slate-600 mb-8">Analyse quantitative de la taille, la croissance et la géographie du marché.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="card p-6">
+                    <h3 class="font-semibold text-slate-800 mb-4">Projection de Croissance du Marché (SOM, 2025-2030)</h3>
+                    <p class="text-sm text-slate-500 mb-4">Visualisation de la croissance estimée du marché des MOOCs en IA Générative, atteignant plus de 2,5 milliards de dollars d'ici 2030.</p>
+                    <div class="chart-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+                <div class="card p-6">
+                    <h3 class="font-semibold text-slate-800 mb-4">Géographie des Utilisateurs</h3>
+                     <p class="text-sm text-slate-500 mb-6">Répartition de la demande actuelle et des zones de plus forte croissance pour les compétences en IA Générative.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-teal-700">Amérique du Nord</span>
+                                <span class="text-sm font-medium text-teal-700">~41% (Leader Actuel)</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div class="bg-teal-600 h-2.5 rounded-full" style="width: 41%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-orange-700">Asie-Pacifique</span>
+                                <span class="text-sm font-medium text-orange-700">Plus Forte Croissance</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div class="bg-orange-500 h-2.5 rounded-full" style="width: 30%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-blue-700">Europe</span>
+                                <span class="text-sm font-medium text-blue-700">Croissance Soutenue</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div class="bg-blue-600 h-2.5 rounded-full" style="width: 22%"></div>
+                            </div>
+                        </div>
+                         <div>
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-slate-600">Reste du monde</span>
+                                <span class="text-sm font-medium text-slate-600">Émergent</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-2.5">
+                                <div class="bg-slate-500 h-2.5 rounded-full" style="width: 7%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="acteurs" class="scroll-mt-20 mt-16 section-fade-in">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Cartographie des Acteurs</h2>
+            <p class="text-lg text-slate-600 mb-8">Explorez les relations entre les plateformes, universités et entreprises qui façonnent l'écosystème.</p>
+            <div class="card p-6">
+                <h3 class="font-semibold text-slate-800 mb-1">Écosystème Interactif</h3>
+                <p class="text-sm text-slate-500 mb-6">Cliquez sur une catégorie pour afficher les acteurs clés.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <button data-category="platforms" class="actor-category-btn bg-teal-50 border-2 border-teal-200 text-teal-800 font-semibold p-4 rounded-lg shadow-sm hover:bg-teal-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-opacity-50 transition-all duration-200">Plateformes MOOC</button>
+                    <button data-category="tech" class="actor-category-btn bg-blue-50 border-2 border-blue-200 text-blue-800 font-semibold p-4 rounded-lg shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-all duration-200">Entreprises Tech</button>
+                    <button data-category="universities" class="actor-category-btn bg-indigo-50 border-2 border-indigo-200 text-indigo-800 font-semibold p-4 rounded-lg shadow-sm hover:bg-indigo-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-opacity-50 transition-all duration-200">Universités Partenaires</button>
+                    <button data-category="startups" class="actor-category-btn bg-orange-50 border-2 border-orange-200 text-orange-800 font-semibold p-4 rounded-lg shadow-sm hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-opacity-50 transition-all duration-200">Fournisseurs Spécialisés</button>
+                </div>
+                <div id="actors-display" class="mt-6 p-6 bg-slate-50 rounded-lg min-h-[150px] transition-all duration-300">
+                    <p class="text-slate-500 text-center">Sélectionnez une catégorie pour commencer.</p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="tendances" class="scroll-mt-20 mt-16 section-fade-in">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Tendances Clés</h2>
+            <p class="text-lg text-slate-600 mb-8">Les dynamiques qui transforment le marché de la formation en IA.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="card p-6">
+                    <h4 class="font-bold text-lg text-teal-700">Tuteurs IA & Pédagogie Adaptative</h4>
+                    <p class="mt-2 text-slate-600">L'IA n'est plus seulement le sujet enseigné, mais aussi l'outil qui personnalise l'apprentissage. Des plateformes comme Coursera (Coach) et edX (Xpert) intègrent des assistants pour un soutien individualisé, visant à augmenter l'engagement et les taux de complétion.</p>
+                </div>
+                 <div class="card p-6">
+                    <h4 class="font-bold text-lg text-teal-700">Intégration d'Outils</h4>
+                    <p class="mt-2 text-slate-600">L'IA Générative est utilisée pour accélérer la création de cours (AI Course Creator d'Open edX), générer des quiz et fournir des environnements de test (playgrounds) sécurisés pour s'exercer avec les LLMs.</p>
+                </div>
+                <div class="card p-6">
+                    <h4 class="font-bold text-lg text-teal-700">Partenariats Stratégiques</h4>
+                    <p class="mt-2 text-slate-600">La "coopétition" est la norme. Les plateformes MOOC s'allient aux géants de la tech (Google, IBM, Microsoft) pour offrir des certifications industrielles crédibles et des contenus de pointe, assurant leur pertinence.</p>
+                </div>
+                <div class="card p-6">
+                    <h4 class="font-bold text-lg text-teal-700">Évolution des Compétences</h4>
+                    <p class="mt-2 text-slate-600">La demande explose pour des rôles techniques (Prompt Engineer, Applied ML) mais aussi pour l'application de l'IA dans tous les métiers (marketing, vente). Les "soft skills" (pensée critique, adaptabilité) deviennent cruciales pour collaborer avec l'IA.</p>
+                </div>
+                <div class="card p-6">
+                    <h4 class="font-bold text-lg text-teal-700">Impact Éthique et Réglementaire</h4>
+                    <p class="mt-2 text-slate-600">Les cours doivent impérativement intégrer les notions d'IA responsable, de biais, de gouvernance et de conformité aux réglementations (ex: AI Act de l'UE). C'est devenu un gage de qualité et un différenciateur clé.</p>
+                </div>
+                 <div class="card p-6">
+                    <h4 class="font-bold text-lg text-teal-700">Hyper-spécialisation</h4>
+                    <p class="mt-2 text-slate-600">Au-delà des fondamentaux, le marché se fragmente avec des formations dédiées à des industries (santé, finance), des cas d'usage précis (découverte de médicaments) et des publics non-techniques ("citizen developers").</p>
+                </div>
+            </div>
+            <div class="mt-10 text-center section-fade-in">
+                <button id="generateCourseIdeasBtn" class="bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-600 hover:to-cyan-700 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out">
+                    ✨ Générer des Idées de Cours avec l'IA
+                </button>
+            </div>
+        </section>
+
+        <section id="perspectives" class="scroll-mt-20 mt-16 section-fade-in">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Perspectives 2025-2030</h2>
+            <p class="text-lg text-slate-600 mb-8">Explorez les scénarios d'évolution technologique et réglementaire du marché.</p>
+            <div class="card p-6">
+                <h3 class="font-semibold text-slate-800 mb-1">Scénarios d'Évolution</h3>
+                <p class="text-sm text-slate-500 mb-6">Sélectionnez un scénario pour voir son impact potentiel sur le marché des MOOCs.</p>
+                <div class="flex flex-wrap gap-3 mb-6">
+                    <button class="scenario-btn active bg-teal-600 text-white px-4 py-2 rounded-full text-sm font-medium" data-scenario="base">Scénario de Base</button>
+                    <button class="scenario-btn bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-full text-sm font-medium" data-scenario="optimistic">Scénario Optimiste</button>
+                    <button class="scenario-btn bg-white border border-slate-300 text-slate-600 px-4 py-2 rounded-full text-sm font-medium" data-scenario="pessimistic">Scénario Pessimiste</button>
+                </div>
+                <div id="scenario-content" class="p-6 bg-slate-50 rounded-lg">
+                </div>
+            </div>
+        </section>
+        
+        <section id="swot" class="scroll-mt-20 mt-16 section-fade-in">
+            <h2 class="text-3xl font-bold text-slate-900 mb-2">Analyse SWOT</h2>
+            <p class="text-lg text-slate-600 mb-8">Synthèse des facteurs internes et externes influençant le marché.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-green-50 p-6 rounded-lg border border-green-200">
+                    <h3 class="text-xl font-bold text-green-800 mb-4">Forces</h3>
+                    <ul class="list-disc list-inside space-y-2 text-green-900/90">
+                        <li>Accessibilité et scalabilité massives des MOOCs</li>
+                        <li>Demande urgente et croissante en compétences IA</li>
+                        <li>Partenariats solides avec les leaders tech et universités</li>
+                        <li>Innovation pédagogique continue (intégration de l'IA)</li>
+                    </ul>
+                </div>
+                 <div class="bg-red-50 p-6 rounded-lg border border-red-200">
+                    <h3 class="text-xl font-bold text-red-800 mb-4">Faiblesses</h3>
+                    <ul class="list-disc list-inside space-y-2 text-red-900/90">
+                        <li>Taux d'abandon historiquement élevés</li>
+                        <li>Qualité des contenus très variable et risque d'obsolescence</li>
+                        <li>Reconnaissance institutionnelle parfois limitée</li>
+                        <li>Difficulté à évaluer les compétences pratiques à grande échelle</li>
+                    </ul>
+                </div>
+                 <div class="bg-sky-50 p-6 rounded-lg border border-sky-200">
+                    <h3 class="text-xl font-bold text-sky-800 mb-4">Opportunités</h3>
+                    <ul class="list-disc list-inside space-y-2 text-sky-900/90">
+                        <li>Marché global de l'IA en très forte expansion</li>
+                        <li>Besoins massifs de reconversion et montée en compétences</li>
+                        <li>Demande corporate (B2B) croissante pour la formation</li>
+                        <li>Émergence de niches et de formations hyper-spécialisées</li>
+                    </ul>
+                </div>
+                 <div class="bg-amber-50 p-6 rounded-lg border border-amber-200">
+                    <h3 class="text-xl font-bold text-amber-800 mb-4">Menaces</h3>
+                    <ul class="list-disc list-inside space-y-2 text-amber-900/90">
+                        <li>Concurrence intense (formations traditionnelles, bootcamps)</li>
+                        <li>Évolution technologique extrêmement rapide</li>
+                        <li>Incertitudes réglementaires et éthiques</li>
+                        <li>Saturation du marché des cours d'introduction</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-slate-800 text-white mt-16">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-4 text-center text-sm text-slate-400">
+            <p>Application Interactive basée sur le rapport "Étude de Marché Stratégique : Écosystème des MOOCs en IA Générative - Analyse 2025".</p>
+            <p>&copy; 2025 - Visualisation de Données Stratégiques.</p>
+        </div>
+    </footer>
+
+    <div id="courseIdeasModal" class="modal fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-[100] opacity-0 invisible">
+        <div class="modal-content bg-white rounded-xl shadow-2xl p-6 md:p-8 w-full max-w-2xl transform scale-95">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-2xl font-bold text-teal-700">✨ Idées de Cours Innovantes</h3>
+                <button id="closeCourseIdeasModalBtn" class="text-slate-500 hover:text-slate-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div id="courseIdeasContent" class="max-h-[60vh] overflow-y-auto pr-2 text-slate-700 space-y-4">
+                <div id="courseIdeasLoader" class="hidden flex flex-col items-center justify-center py-10">
+                    <div class="loader"></div>
+                    <p class="mt-4 text-slate-600">Génération des idées en cours...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+
+    const data = {
+        segmentation: {
+            labels: ['Professionnels (Upskilling)', 'Entreprises (B2B)', 'Étudiants'],
+            values: [55, 30, 15]
+        },
+        growth: {
+            years: ['2025', '2026', '2027', '2028', '2029', '2030'],
+            values: [500, 690, 952, 1314, 1813, 2502]
+        },
+        actors: {
+            platforms: { name: "Plateformes MOOC", color: "teal", items: ["Coursera", "edX (2U)", "Udacity", "LinkedIn Learning", "FutureLearn"] },
+            tech: { name: "Entreprises Tech", color: "blue", items: ["Google (Cloud)", "Microsoft (Learn)", "AWS Training", "IBM", "NVIDIA", "DeepLearning.AI"] },
+            universities: { name: "Universités Partenaires", color: "indigo", items: ["Stanford", "MIT", "U. Penn", "Vanderbilt", "King's College London", "IIT Jodhpur"] },
+            startups: { name: "Fournisseurs Spécialisés", color: "orange", items: ["Futurense", "Synthesia", "MOSTLY AI", "Genie AI"] }
+        },
+        scenarios: {
+            base: {
+                title: 'Scénario de Base : Croissance Gérée et Coévolution Réglementaire',
+                content: "Le progrès de l'IA est continu mais gérable. Les régulations cherchent un équilibre entre innovation et sécurité. L'impact sur les MOOCs est une croissance forte et soutenue, avec une adaptation progressive des cursus pour intégrer l'IA responsable. C'est le scénario le plus probable, favorisant une expansion durable du marché."
+            },
+            optimistic: {
+                title: 'Scénario Optimiste : Hyper-Croissance et Innovation Ouverte',
+                content: "Des percées technologiques majeures et une réglementation légère propulsent une demande exponentielle pour des formations très avancées. Les MOOCs deviennent des plateformes d'apprentissage continu extrêmement agiles et sophistiquées, avec des tuteurs IA très performants."
+            },
+            pessimistic: {
+                title: 'Scénario Pessimiste : Hiver de l\'IA et Carcan Réglementaire',
+                content: "Un plafonnement technologique et des régulations très restrictives freinent le marché. La demande de formation ralentit, les contenus deviennent vite obsolètes ou complexes à adapter, et la méfiance du public envers l'IA grandit."
+            }
+        }
+    };
+
+    const wrapLabel = (label, maxWidth) => {
+        const words = label.split(' ');
+        let line = '';
+        const lines = [];
+        for(let i = 0; i < words.length; i++) {
+            const testLine = line + words[i] + ' ';
+            if (testLine.length > maxWidth && i > 0) {
+                lines.push(line);
+                line = words[i] + ' ';
+            } else {
+                line = testLine;
+            }
+        }
+        lines.push(line);
+        return lines;
+    };
+
+    const ctxSegmentation = document.getElementById('segmentationChart');
+    if (ctxSegmentation) {
+        new Chart(ctxSegmentation, {
+            type: 'doughnut',
+            data: {
+                labels: data.segmentation.labels,
+                datasets: [{
+                    label: 'Segmentation des Apprenants',
+                    data: data.segmentation.values,
+                    backgroundColor: ['#14b8a6', '#3b82f6', '#f97316'],
+                    borderColor: '#f8fafc',
+                    borderWidth: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 15,
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed !== null) {
+                                    label += context.parsed + '%';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                },
+                cutout: '60%'
+            }
+        });
+    }
+
+    const ctxGrowth = document.getElementById('growthChart');
+    if (ctxGrowth) {
+        new Chart(ctxGrowth, {
+            type: 'line',
+            data: {
+                labels: data.growth.years,
+                datasets: [{
+                    label: 'Taille du Marché (SOM en M$)',
+                    data: data.growth.values,
+                    fill: true,
+                    backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                    borderColor: '#0d9488',
+                    tension: 0.3,
+                    pointBackgroundColor: '#0d9488',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: '#0d9488'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' M$';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return ' ' + context.parsed.y + ' M$';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    const actorCategoryBtns = document.querySelectorAll('.actor-category-btn');
+    const actorsDisplay = document.getElementById('actors-display');
+    actorCategoryBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const category = btn.dataset.category;
+            const actorData = data.actors[category];
+            actorsDisplay.innerHTML = `
+                <h4 class="font-bold text-lg text-${actorData.color}-700 mb-4">${actorData.name}</h4>
+                <div class="flex flex-wrap gap-2 justify-center">
+                    ${actorData.items.map(item => `<span class="bg-${actorData.color}-100 text-${actorData.color}-800 text-sm font-medium px-3 py-1 rounded-full">${item}</span>`).join('')}
+                </div>
+            `;
+        });
+    });
+
+    const scenarioBtns = document.querySelectorAll('.scenario-btn');
+    const scenarioContent = document.getElementById('scenario-content');
+    const updateScenarioContent = (scenarioKey) => {
+        const scenarioData = data.scenarios[scenarioKey];
+        scenarioContent.innerHTML = `
+            <h4 class="font-bold text-lg text-slate-800 mb-2">${scenarioData.title}</h4>
+            <p class="text-slate-600">${scenarioData.content}</p>
+        `;
+        scenarioBtns.forEach(b => {
+            b.classList.remove('active', 'bg-teal-600', 'text-white');
+            b.classList.add('bg-white', 'border', 'border-slate-300', 'text-slate-600');
+            if (b.dataset.scenario === scenarioKey) {
+                b.classList.add('active', 'bg-teal-600', 'text-white');
+                b.classList.remove('bg-white', 'border', 'border-slate-300', 'text-slate-600');
+            }
+        });
+    };
+    
+    scenarioBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            updateScenarioContent(btn.dataset.scenario);
+        });
+    });
+    updateScenarioContent('base');
+
+    const mobileMenuButton = document.getElementById('mobile-menu-button');
+    const mobileMenu = document.getElementById('mobile-menu');
+    mobileMenuButton.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+    });
+
+    const sections = document.querySelectorAll('.section-fade-in');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.1 });
+    sections.forEach(section => {
+        observer.observe(section);
+    });
+
+    const navLinks = document.querySelectorAll('.nav-link');
+    const navObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const id = entry.target.getAttribute('id');
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.getAttribute('href') === `#${id}`) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+        });
+    }, { rootMargin: '-30% 0px -70% 0px' });
+
+    sections.forEach(section => {
+        navObserver.observe(section);
+    });
+
+    // Gemini API Integration
+    const generateCourseIdeasBtn = document.getElementById('generateCourseIdeasBtn');
+    const courseIdeasModal = document.getElementById('courseIdeasModal');
+    const closeCourseIdeasModalBtn = document.getElementById('closeCourseIdeasModalBtn');
+    const courseIdeasContent = document.getElementById('courseIdeasContent');
+    const courseIdeasLoader = document.getElementById('courseIdeasLoader');
+
+    const showModal = () => {
+        courseIdeasModal.classList.remove('invisible', 'opacity-0');
+        courseIdeasModal.querySelector('.modal-content').classList.remove('scale-95');
+        courseIdeasModal.querySelector('.modal-content').classList.add('scale-100');
+    };
+
+    const hideModal = () => {
+        courseIdeasModal.querySelector('.modal-content').classList.remove('scale-100');
+        courseIdeasModal.querySelector('.modal-content').classList.add('scale-95');
+        courseIdeasModal.classList.add('opacity-0');
+        setTimeout(() => {
+            courseIdeasModal.classList.add('invisible');
+        }, 300);
+    };
+
+    generateCourseIdeasBtn.addEventListener('click', async () => {
+        showModal();
+        courseIdeasLoader.classList.remove('hidden');
+        courseIdeasContent.innerHTML = ''; 
+        courseIdeasContent.appendChild(courseIdeasLoader);
+
+        const prompt =
+            "Agissant en tant qu'expert en conception pédagogique pour les MOOCs sur l'IA générative, et en tenant compte des tendances actuelles du marché " +
+            "telles que l'hyper-spécialisation, l'évolution rapide des compétences (notamment en prompt engineering et en application de modèles de langage), " +
+            "et le besoin de formation pour les professionnels et les entreprises, proposez 3 idées de cours MOOC innovants et spécifiques. " +
+            "Pour chaque idée, fournissez :\n" +
+            "1. Un titre accrocheur pour le cours.\n" +
+            "2. Une brève description (2-3 phrases).\n" +
+            "3. 2-3 résultats d'apprentissage clés.\n" +
+            "Le public cible principal est constitué de professionnels cherchant à se perfectionner ou à se reconvertir. " +
+            "Formatez la réponse en HTML simple, en utilisant des balises <h4> pour les titres de cours, <p> pour les descriptions, et une liste <ul><li> pour les résultats d'apprentissage.";
+
+        let chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+        const payload = { contents: chatHistory };
+        const apiKey = ""; 
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        try {
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status} ${response.statusText}`);
+            }
+
+            const result = await response.json();
+            
+            courseIdeasLoader.classList.add('hidden');
+
+            if (result.candidates && result.candidates.length > 0 &&
+                result.candidates[0].content && result.candidates[0].content.parts &&
+                result.candidates[0].content.parts.length > 0) {
+                const text = result.candidates[0].content.parts[0].text;
+                const sanitizedText = text.replace(/<script.*?>.*?<\/script>/gi, '');
+                courseIdeasContent.innerHTML = sanitizedText;
+            } else {
+                courseIdeasContent.innerHTML = '<p class="text-red-500">Désolé, une erreur est survenue lors de la génération des idées. Veuillez réessayer.</p>';
+                console.error('Unexpected API response structure:', result);
+            }
+
+        } catch (error) {
+            courseIdeasLoader.classList.add('hidden');
+            courseIdeasContent.innerHTML = `<p class="text-red-500">Erreur de connexion à l'API Gemini : ${error.message}. Veuillez vérifier votre connexion ou réessayer plus tard.</p>`;
+            console.error('Error fetching course ideas:', error);
+        }
+    });
+
+    closeCourseIdeasModalBtn.addEventListener('click', hideModal);
+    courseIdeasModal.addEventListener('click', (event) => {
+        if (event.target === courseIdeasModal) {
+            hideModal();
+        }
+    });
+
+});
+</script>
+
+</body>
+</html>
